@@ -11,8 +11,11 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { API_URL } from '@realworld/core/http-client';
 import { environment } from '../environments/environment';
 import { RosterComponent } from './roster/roster.component';
+import { AppModule } from './app.module';
+
 export const appConfig: ApplicationConfig = {
   providers: [
+    AppModule,
     provideRouter([
       {
         path: '',
@@ -51,6 +54,8 @@ export const appConfig: ApplicationConfig = {
       },
 
       { path: 'roster', component: RosterComponent },
+
+    
 
     ]),
     provideStore({

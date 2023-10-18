@@ -1,1 +1,21 @@
 <h1>Conduit Roaster</h1>
+
+
+<table>
+    <thead>
+      <tr>
+        <th>User Name</th>
+        <th>Total Articles</th>
+        <th>Total Favorites</th>
+        <th>Date of First Article</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let author of authorsStats">
+        <td><a [routerLink]="['/profile', author.username]">{{ author.username }}</a></td>
+        <td>{{ author.totalArticles }}</td>
+        <td>{{ author.totalFavorites }}</td>
+        <td>{{ author.firstArticleDate | date }}</td>
+      </tr>
+    </tbody>
+  </table>
