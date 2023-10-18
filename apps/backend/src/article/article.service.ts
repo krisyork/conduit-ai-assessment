@@ -159,13 +159,13 @@ export class ArticleService {
 
     // Check if dto.tagList is a string and handle accordingly
     if (typeof dto.tagList === 'string') {
-        article.tagList.push(dto.tagList);
+        article.tagList.push(...(dto.tagList as string).split(',').map(tag => tag.trim()));
     } else {
         article.tagList.push(...dto.tagList);
     }
 
     // Save new tags to the Tag entity in the database
-    for (const tag of dto.tagList) {
+    for (const tag of article.tagList) {
         let tagEntity = await this.tagRepository.findOne({ tag: tag });
         if (!tagEntity) {
             tagEntity = new Tag();
@@ -179,6 +179,7 @@ export class ArticleService {
 
     return { article: article.toJSON(user!) };
 }
+
 
   async update(userId: number, slug: string, articleData: any): Promise<IArticleRO> {
     const user = await this.userRepository.findOne(
