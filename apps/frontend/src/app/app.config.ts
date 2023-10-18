@@ -10,6 +10,7 @@ import { provideEffects } from '@ngrx/effects';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { API_URL } from '@realworld/core/http-client';
 import { environment } from '../environments/environment';
+import { RosterComponent } from './roster/roster.component';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter([
@@ -48,6 +49,9 @@ export const appConfig: ApplicationConfig = {
         path: 'profile',
         loadChildren: () => import('@realworld/profile/feature-profile').then((profile) => profile.PROFILE_ROUTES),
       },
+
+      { path: 'roster', component: RosterComponent },
+
     ]),
     provideStore({
       auth: authFeature.reducer,
