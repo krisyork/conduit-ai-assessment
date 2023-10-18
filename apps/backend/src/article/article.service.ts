@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { EntityManager, QueryOrder, wrap } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/mysql';
-
+import { Tag } from '../tag/tag.entity';
 import { User } from '../user/user.entity';
 import { Article } from './article.entity';
 import { IArticleRO, IArticlesRO, ICommentsRO } from './article.interface';
@@ -15,6 +15,8 @@ export class ArticleService {
     private readonly em: EntityManager,
     @InjectRepository(Article)
     private readonly articleRepository: EntityRepository<Article>,
+    @InjectRepository(Tag)
+    private readonly tagRepository: EntityRepository<Tag>,
     @InjectRepository(Comment)
     private readonly commentRepository: EntityRepository<Comment>,
     @InjectRepository(User)
@@ -150,16 +152,33 @@ export class ArticleService {
 
   async create(userId: number, dto: CreateArticleDto) {
     const user = await this.userRepository.findOne(
-      { id: userId },
-      { populate: ['followers', 'favorites', 'articles'] },
+        { id: userId },
+        { populate: ['followers', 'favorites', 'articles'] },
     );
     const article = new Article(user!, dto.title, dto.description, dto.body);
-    article.tagList.push(...dto.tagList);
+
+    // Check if dto.tagList is a string and handle accordingly
+    if (typeof dto.tagList === 'string') {
+        article.tagList.push(dto.tagList);
+    } else {
+        article.tagList.push(...dto.tagList);
+    }
+
+    // Save new tags to the Tag entity in the database
+    for (const tag of dto.tagList) {
+        let tagEntity = await this.tagRepository.findOne({ tag: tag });
+        if (!tagEntity) {
+            tagEntity = new Tag();
+            tagEntity.tag = tag;
+            await this.tagRepository.persistAndFlush(tagEntity);
+        }
+    }
+
     user?.articles.add(article);
     await this.em.flush();
 
     return { article: article.toJSON(user!) };
-  }
+}
 
   async update(userId: number, slug: string, articleData: any): Promise<IArticleRO> {
     const user = await this.userRepository.findOne(
