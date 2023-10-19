@@ -11,7 +11,7 @@ interface AuthorStats {
 
 interface Article {
   author: {
-    username: string;
+    id: number;  // Change this to id
   };
   createdAt: string;
   favoritesCount: number;
@@ -21,39 +21,42 @@ interface Article {
   selector: 'app-roster',
   templateUrl: './roster.component.html',
   styleUrls: ['./roster.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush  // Add this line for OnPush change detection strategy
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RosterComponent implements OnInit {
   authorsStats: AuthorStats[] = [];
 
-  constructor(private articleService: ArticleService, private cdr: ChangeDetectorRef) {}  // Inject ChangeDetectorRef
+  constructor(private articleService: ArticleService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
-    this.articleService.getAllArticles().subscribe(data => {
-      const articles: Article[] = data.articles;
-      const stats: Record<string, AuthorStats> = {};
+    // Fetch usernames first
+    this.articleService.getUsernames().subscribe(usernames => {
+      this.articleService.getAllArticles().subscribe(data => {
+        const articles: Article[] = data.articles;
+        const stats: Record<number, AuthorStats> = {};  // Change key to number for author ID
 
-      articles.forEach(article => {
-        const author = article.author.username;
-        if (!stats[author]) {
-          stats[author] = {
-            username: author,
-            totalArticles: 0,
-            totalFavorites: 0,
-            firstArticleDate: new Date(article.createdAt)
-          };
-        }
-        stats[author].totalArticles++;
-        stats[author].totalFavorites += article.favoritesCount;
-        const articleDate = new Date(article.createdAt);
-        if (articleDate < stats[author].firstArticleDate) {
-          stats[author].firstArticleDate = articleDate;
-        }
+        articles.forEach(article => {
+          const authorId = article.author.id;
+          if (!stats[authorId]) {
+            stats[authorId] = {
+              username: usernames[authorId],  // Fetch username from the usernames list
+              totalArticles: 0,
+              totalFavorites: 0,
+              firstArticleDate: new Date(article.createdAt)
+            };
+          }
+          stats[authorId].totalArticles++;
+          stats[authorId].totalFavorites += article.favoritesCount;
+          const articleDate = new Date(article.createdAt);
+          if (articleDate < stats[authorId].firstArticleDate) {
+            stats[authorId].firstArticleDate = articleDate;
+          }
+        });
+
+        this.authorsStats = Object.values(stats).sort((a: AuthorStats, b: AuthorStats) => b.totalFavorites - a.totalFavorites);
+        this.cdr.markForCheck();
+        console.log(this.authorsStats);
       });
-
-      this.authorsStats = Object.values(stats).sort((a: AuthorStats, b: AuthorStats) => b.totalFavorites - a.totalFavorites);
-      this.cdr.markForCheck();  // Add this line to manually trigger change detection
-      console.log(this.authorsStats);
     });
   }
 }

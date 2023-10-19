@@ -26,6 +26,13 @@ export class ArticleController {
     return this.articleService.findFeed(+userId, query);
   }
 
+  @ApiOperation({ summary: 'Get all unique usernames' })
+  @ApiResponse({ status: 200, description: 'Return all unique usernames.' })
+  @Get('usernames')
+  async findAllUsernames(): Promise<string[]> {
+    return this.articleService.findAllUsernames();
+  }
+
   @Get(':slug')
   async findOne(@User('id') userId: number, @Param('slug') slug: string): Promise<IArticleRO> {
     return this.articleService.findOne(userId, { slug });

@@ -13,4 +13,8 @@ export class ArticleService {
   getAllArticles(): Observable<any> {
     return this.http.get(this.apiUrl);
   }
+
+  getUsernames(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/usernames`);
+  }
 }
