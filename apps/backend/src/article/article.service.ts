@@ -23,6 +23,12 @@ export class ArticleService {
     private readonly userRepository: EntityRepository<User>,
   ) {}
 
+  async findAllUsernames(): Promise<string[]> {
+    const users = await this.userRepository.findAll();
+    const usernames = users.map(user => user.username);
+    return usernames;
+  }
+
   async findAll(userId: number, query: Record<string, string>): Promise<IArticlesRO> {
     const user = userId
       ? await this.userRepository.findOne(userId, { populate: ['followers', 'favorites'] })
