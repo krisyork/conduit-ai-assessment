@@ -85,6 +85,7 @@ export class ArticleService {
       },
     );
 
+    console.log('findFeed', { articles: res[0], articlesCount: res[1] });
     return { articles: res[0].map((a) => a.toJSON(user!)), articlesCount: res[1] };
   }
 
@@ -156,9 +157,6 @@ export class ArticleService {
     );
     const article = new Article(user!, dto.title, dto.description, dto.body);
 
-    // Set the author_username when creating a new article
-    article.author_username = user!.username;
-
     // Check if dto.tagList is a string and handle accordingly
     if (typeof dto.tagList === 'string') {
         article.tagList.push(...(dto.tagList as string).split(',').map(tag => tag.trim()));
@@ -180,7 +178,8 @@ export class ArticleService {
     await this.em.flush();
 
     return { article: article.toJSON(user!) };
-  }
+}
+
 
   async update(userId: number, slug: string, articleData: any): Promise<IArticleRO> {
     const user = await this.userRepository.findOne(
@@ -189,10 +188,6 @@ export class ArticleService {
     );
     const article = await this.articleRepository.findOne({ slug }, { populate: ['author'] });
     wrap(article).assign(articleData);
-
-    // Update the author_username when updating an article
-    article!.author_username = user!.username;
-
     await this.em.flush();
 
     return { article: article!.toJSON(user!) };
