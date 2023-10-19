@@ -1,6 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ArticleService } from '../article.service';
-import { ChangeDetectorRef } from '@angular/core';
 
 // Define the types
 interface AuthorStats {
@@ -21,12 +20,13 @@ interface Article {
 @Component({
   selector: 'app-roster',
   templateUrl: './roster.component.html',
-  styleUrls: ['./roster.component.css']
+  styleUrls: ['./roster.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush  // Add this line for OnPush change detection strategy
 })
 export class RosterComponent implements OnInit {
   authorsStats: AuthorStats[] = [];
 
-  constructor(private articleService: ArticleService, ) {}
+  constructor(private articleService: ArticleService, private cdr: ChangeDetectorRef) {}  // Inject ChangeDetectorRef
 
   ngOnInit(): void {
     this.articleService.getAllArticles().subscribe(data => {
@@ -52,6 +52,8 @@ export class RosterComponent implements OnInit {
       });
 
       this.authorsStats = Object.values(stats).sort((a: AuthorStats, b: AuthorStats) => b.totalFavorites - a.totalFavorites);
+      this.cdr.markForCheck();  // Add this line to manually trigger change detection
+      console.log(this.authorsStats);
     });
   }
 }

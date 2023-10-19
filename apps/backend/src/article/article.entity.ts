@@ -43,6 +43,9 @@ export class Article {
   @ManyToOne(() => User)
   author: User;
 
+  @Property()
+  author_username: string; // <-- Added this line
+
   @OneToMany(() => Comment, (comment) => comment.article, { eager: true, orphanRemoval: true })
   comments = new Collection<Comment>(this);
 
@@ -55,6 +58,7 @@ export class Article {
     this.description = description;
     this.body = body;
     this.slug = slug(title, { lower: true }) + '-' + ((Math.random() * Math.pow(36, 6)) | 0).toString(36);
+    this.author_username = author.username; // <-- Added this line to set the username when creating a new article
   }
 
   toJSON(user?: User) {
