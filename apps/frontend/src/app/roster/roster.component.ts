@@ -1,5 +1,6 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ArticleService } from '../article.service';
+import { forkJoin } from 'rxjs';
 
 // Define the types
 interface AuthorStats {
@@ -11,7 +12,7 @@ interface AuthorStats {
 
 interface Article {
   author: {
-    id: number;  // Change this to id
+    id: number;
   };
   createdAt: string;
   favoritesCount: number;
@@ -29,34 +30,41 @@ export class RosterComponent implements OnInit {
   constructor(private articleService: ArticleService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
-    // Fetch usernames first
-    this.articleService.getUsernames().subscribe(usernames => {
-      this.articleService.getAllArticles().subscribe(data => {
-        const articles: Article[] = data.articles;
-        const stats: Record<number, AuthorStats> = {};  // Change key to number for author ID
+    forkJoin({
+      articlesData: this.articleService.getAllArticles(),
+      usernames: this.articleService.getUsernames()
+    }).subscribe(({ articlesData, usernames }) => {
+      console.log(articlesData);  // Log the articlesData to see its structure
 
-        articles.forEach(article => {
-          const authorId = article.author.id;
-          if (!stats[authorId]) {
-            stats[authorId] = {
-              username: usernames[authorId],  // Fetch username from the usernames list
+      const articles = articlesData.articles;  // Assuming the structure is { articles: [...], count: ... }
+
+      const stats: Record<string, AuthorStats> = {};
+
+      if (Array.isArray(articles)) {  // Check if articles is an array
+        (articles as Article[]).forEach(article => {
+          const username = usernames[article.author.id - 1];
+          if (!stats[username]) {
+            stats[username] = {
+              username: username,
               totalArticles: 0,
               totalFavorites: 0,
               firstArticleDate: new Date(article.createdAt)
             };
           }
-          stats[authorId].totalArticles++;
-          stats[authorId].totalFavorites += article.favoritesCount;
+          stats[username].totalArticles++;
+          stats[username].totalFavorites += article.favoritesCount;
           const articleDate = new Date(article.createdAt);
-          if (articleDate < stats[authorId].firstArticleDate) {
-            stats[authorId].firstArticleDate = articleDate;
+          if (articleDate < stats[username].firstArticleDate) {
+            stats[username].firstArticleDate = articleDate;
           }
         });
+      } else {
+        console.error("Expected articles to be an array, but got:", articles);
+      }
 
-        this.authorsStats = Object.values(stats).sort((a: AuthorStats, b: AuthorStats) => b.totalFavorites - a.totalFavorites);
-        this.cdr.markForCheck();
-        console.log(this.authorsStats);
-      });
+      this.authorsStats = Object.values(stats).sort((a: AuthorStats, b: AuthorStats) => b.totalFavorites - a.totalFavorites);
+      this.cdr.markForCheck();
+      console.log(this.authorsStats);
     });
   }
 }

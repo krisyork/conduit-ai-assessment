@@ -49,14 +49,10 @@ export const appConfig: ApplicationConfig = {
         canActivate: [authGuard],
       },
       {
-        path: 'profile',
+        path: 'profile/:username',
         loadChildren: () => import('@realworld/profile/feature-profile').then((profile) => profile.PROFILE_ROUTES),
       },
-
       { path: 'roster', component: RosterComponent },
-
-    
-
     ]),
     provideStore({
       auth: authFeature.reducer,
